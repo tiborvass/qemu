@@ -347,6 +347,9 @@ unsigned long init_guest_space(unsigned long host_start,
 /* The core part of this function is implemented in assembly */
 extern long safe_syscall_base(int *pending, long number, ...);
 
+#define FIRST_ARG_(N, ...) N
+#define FIRST_ARG(args) FIRST_ARG_ args
+
 #define safe_syscall(...)                                               \
     ({                                                                  \
         long ret_;                                                      \
@@ -354,6 +357,7 @@ extern long safe_syscall_base(int *pending, long number, ...);
         ret_ = safe_syscall_base(psp_, __VA_ARGS__);                    \
         if (is_error(ret_)) {                                           \
             errno = -ret_;                                              \
+            printf("jojo errno from syscall %d: %d\n", FIRST_ARG((__VA_ARGS__)), errno); \
             ret_ = -1;                                                  \
         }                                                               \
         ret_;                                                           \
