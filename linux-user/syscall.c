@@ -112,6 +112,10 @@
 #include "qapi/error.h"
 #include "fd-trans.h"
 
+#ifdef CONFIG_BINFMT_PRESERVE_ARGV0
+#include <string.h>
+#endif
+
 #ifndef CLONE_IO
 #define CLONE_IO                0x80000000      /* Clone io context */
 #endif
@@ -7323,6 +7327,32 @@ static abi_long do_syscall1(void *cpu_env, int num, abi_long arg1,
 
             if (!(p = lock_user_string(arg1)))
                 goto execve_efault;
+
+#ifdef CONFIG_BINFMT_PRESERVE_ARGV0
+            /* We need to handle specially the case where the process
+             * tries to exec /proc/self/exe because the latter does not
+             * map to the target process but to QEMU.
+             * Here, we can assume that QEMU was run through binfmt
+             * with the P (preserve argv0) option.
+             *
+             * So we set the execve path to one past the first 0 byte
+             * in cmdline.
+             */
+            if (is_proc_myself(p, "exe")) {
+                int fd = open("/proc/self/cmdline", O_RDONLY);
+                if (fd) {
+                    goto execve_efault;
+                }
+                // 1024 should be enough
+                char buf[1024];
+                if (read(fd, buf, 1024) < 0) {
+                    goto execve_efault;
+                }
+                char *pp;
+                for (pp = buf; pp && *pp; pp++);
+                p = pp + 1;
+            }
+#endif
             /* Although execve() is not an interruptible syscall it is
              * a special case where we must use the safe_syscall wrapper:
              * if we allow a signal to happen before we make the host
