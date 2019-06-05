@@ -11710,6 +11710,7 @@ static abi_long do_syscall1(void *cpu_env, int num, abi_long arg1,
 #endif
 #ifdef TARGET_NR_memfd_create
     case TARGET_NR_memfd_create:
+	return -TARGET_ENOSYS;
         {
             p  = lock_user_string(arg1);
             if (!p) {
