@@ -6669,6 +6669,14 @@ int host_to_target_waitstatus(int status)
     return status;
 }
 
+static int open_self_is_qemu(void *cpu_env, int fd)
+{
+    if (write(fd, "1", 1) != 1) {
+        return -1;
+    }
+    return 0;
+}
+
 static int open_self_cmdline(void *cpu_env, int fd)
 {
     CPUState *cpu = ENV_GET_CPU((CPUArchState *)cpu_env);
@@ -6908,6 +6916,7 @@ static int do_openat(void *cpu_env, int dirfd, const char *pathname, int flags, 
         { "stat", open_self_stat, is_proc_myself },
         { "auxv", open_self_auxv, is_proc_myself },
         { "cmdline", open_self_cmdline, is_proc_myself },
+        { "is_qemu", open_self_is_qemu, is_proc_myself },
 #if defined(HOST_WORDS_BIGENDIAN) != defined(TARGET_WORDS_BIGENDIAN)
         { "/proc/net/route", open_net_route, is_proc },
 #endif

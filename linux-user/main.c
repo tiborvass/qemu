@@ -609,8 +609,8 @@ int main(int argc, char **argv, char **envp)
         exit(EXIT_FAILURE);
     }
 #endif
-    envlist = envlist_create();
 
+    envlist = envlist_create();
     /* add current environment into the list */
     for (wrk = environ; *wrk != NULL; wrk++) {
         (void) envlist_setenv(envlist, *wrk);
